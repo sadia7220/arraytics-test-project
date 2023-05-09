@@ -153,4 +153,29 @@ class AddressBookController extends Controller
             return $this->getResponse(500, 'Something went wrong!');
         return $this->getResponse(200, 'Address has been deleted successfully!');   
     }
+
+    public function searchAddress(Request $request, $param)
+    {
+        $columns = [
+            'name',
+            'phone',
+            'email',
+            'website',
+            'gender',
+            'age',
+            'nationality',
+            'created_at',
+            'created_by'
+        ];
+
+        foreach ($columns as $column) {
+            $result = AddressBook::where('created_by', auth()->user()->name)->where($column, 'like', "%{$param}%")->get();
+
+            if($result != '[]'){
+                $resultArray = $result;
+            }
+        }
+
+        return $this->getResponse(200, 'Successful!', $resultArray); 
+    }
 }

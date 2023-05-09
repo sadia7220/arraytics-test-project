@@ -35,5 +35,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/addresses/{id}', 'show');
         Route::put('/addresses/{id}', 'update');
         Route::delete('/addresses/{id}', 'destroy');
+        Route::get('/addresses/search/{param}', 'searchAddress');
     });
 });

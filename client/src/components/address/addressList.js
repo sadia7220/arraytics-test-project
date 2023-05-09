@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Cookies from "js-cookie";
 import { Link } from 'react-router-dom';
 import {
-    Box, Button, Container, TableContainer, Paper
+    TextField, Box, Button, Container, TableContainer, Paper
 } from '@mui/material';
 import axios from 'axios';
 import Layout from "../layout"
@@ -12,18 +12,43 @@ import swal from 'sweetalert'
 export default function AddressList() {
 
     const [addresses, setAddresses] = useState([])
+    const token = Cookies.get('access_token')
+
+    //for search purpose
+    const [searchQuery, setSearchQuery] = useState('')
+    const [searchResults, setSearchResults] = useState([])
 
     useEffect(() => {
-        const token = Cookies.get('access_token');
+        //address list
         axios.get(`${process.env.REACT_APP_BACKEND_URL}/addresses`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         }).then(({ data }) => {
             setAddresses(data.data)
+            setSearchQuery('')
         })
-    }, [])
+    }, [token])
 
+    useEffect(() => {
+        //search
+        if (searchQuery.length > 2) {
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/addresses/search/${searchQuery}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(({ data }) => {
+                setSearchResults(data.data)
+            })
+        }
+    }, [searchQuery, token])
+
+    //search
+    const handleSearchInputChange = (value) => {
+        setSearchQuery(value)
+    }
+
+    //delete
     const deleteAddress = async (id) => {
         swal({
             title: "Warning!",
@@ -31,15 +56,19 @@ export default function AddressList() {
             icon: "warning",
             dangerMode: true,
         })
-        .then(willDelete => {
-            if (willDelete) {
-                axios.delete(`${process.env.REACT_APP_BACKEND_URL}/addresses/${id}`).then(({ response }) => {
-                    swal("Deleted!", response.message, "success");
-                }).catch(({ response: { data } }) => {
-                    swal("Something went wrong!", data.message, "error")
-                })
-            }
-        });
+            .then(willDelete => {
+                if (willDelete) {
+                    axios.delete(`${process.env.REACT_APP_BACKEND_URL}/addresses/${id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }).then(({ response }) => {
+                        swal("Deleted!", response.message, "success");
+                    }).catch(({ response: { data } }) => {
+                        swal("Something went wrong!", data.message, "error")
+                    })
+                }
+            })
     }
 
     const columns = [
@@ -89,7 +118,9 @@ export default function AddressList() {
         }
     ];
 
-    const rows = addresses.map((address, idx) => {
+    const renderList = searchQuery.length > 2 ? searchResults : addresses
+
+    const rows = renderList.map((address, idx) => {
         return {
             sn: idx + 1,
             name: address.name ? address.name : 'N/A',
@@ -126,6 +157,14 @@ export default function AddressList() {
                     </Button>
                 </Box>
                 <TableContainer component={Paper} >
+                    <TextField
+                        variant='outlined'
+                        placeholder='Search'
+                        type='search'
+                        size="small"
+                        sx={{ mb: 1 }}
+                        onInput={(e) => handleSearchInputChange(e.target.value)}
+                    />
                     <DataTable
                         rows={rows}
                         columns={columns}
