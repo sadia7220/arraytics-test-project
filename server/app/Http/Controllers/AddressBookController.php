@@ -43,7 +43,7 @@ class AddressBookController extends Controller
     {
         $validator = Validator::make($request->all(), [                     
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:address_book,phone',
+            'phone' => 'required|numeric|min:10|unique:address_book,phone',
             'email' => 'required|email|unique:address_book,email',
             'website' => 'nullable|string',
             'gender' => 'required|string',
@@ -112,7 +112,7 @@ class AddressBookController extends Controller
 
         $validator = Validator::make($request->all(), [                     
             'name' => 'string',
-            'phone' => 'string|unique:address_book,phone,'.$addressBook->id,
+            'phone' => 'numeric|min:10|unique:address_book,phone,'.$addressBook->id,
             'email' => 'email|unique:address_book,email,'.$addressBook->id
         ]); 
 
@@ -168,11 +168,32 @@ class AddressBookController extends Controller
             'created_by'
         ];
 
+        $resultArray = [];
+
         foreach ($columns as $column) {
             $result = AddressBook::where('created_by', auth()->user()->name)->where($column, 'like', "%{$param}%")->get();
 
             if($result != '[]'){
                 $resultArray = $result;
+            }
+        }
+
+        return $this->getResponse(200, 'Successful!', $resultArray); 
+    }
+
+    public function genderFilter(Request $request, $param)
+    {
+        $genders = [
+            'male',
+            'female',
+            'other'
+        ];
+
+        $resultArray = [];
+        
+        foreach ($genders as $gender) {
+            if ($param == $gender) {
+                $resultArray = AddressBook::where('created_by', auth()->user()->name)->where('gender', $gender)->get();
             }
         }
 

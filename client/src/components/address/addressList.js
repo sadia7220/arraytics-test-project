@@ -2,21 +2,26 @@ import React, { useEffect, useState } from 'react';
 import Cookies from "js-cookie";
 import { Link } from 'react-router-dom';
 import {
-    TextField, Box, Button, Container, TableContainer, Paper
+    Box, Button, Container, TableContainer, Paper
 } from '@mui/material';
 import axios from 'axios';
 import Layout from "../layout"
 import DataTable from "../shared/dataTable.tsx"
 import swal from 'sweetalert'
+import Search from "./search"
+import Filter from "./filter"
 
 export default function AddressList() {
-
     const [addresses, setAddresses] = useState([])
     const token = Cookies.get('access_token')
 
     //for search purpose
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState([])
+
+    //for filter purpose
+    const [filterQuery, setFilterQuery] = useState('')
+    const [filterResults, setFilterResults] = useState([])
 
     useEffect(() => {
         //address list
@@ -27,26 +32,9 @@ export default function AddressList() {
         }).then(({ data }) => {
             setAddresses(data.data)
             setSearchQuery('')
+            setFilterQuery('')
         })
     }, [token])
-
-    useEffect(() => {
-        //search
-        if (searchQuery.length > 2) {
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/addresses/search/${searchQuery}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            }).then(({ data }) => {
-                setSearchResults(data.data)
-            })
-        }
-    }, [searchQuery, token])
-
-    //search
-    const handleSearchInputChange = (value) => {
-        setSearchQuery(value)
-    }
 
     //delete
     const deleteAddress = async (id) => {
@@ -118,7 +106,7 @@ export default function AddressList() {
         }
     ];
 
-    const renderList = searchQuery.length > 2 ? searchResults : addresses
+    const renderList = searchQuery.length > 1 ? searchResults : filterQuery ? filterResults : addresses
 
     const rows = renderList.map((address, idx) => {
         return {
@@ -152,19 +140,27 @@ export default function AddressList() {
             <Container maxWidth="lg">
                 <h2>Address List</h2>
                 <Box display="flex" justifyContent="flex-end" >
-                    <Button component={Link} to="/address/create" variant="contained" size="small" color="primary" sx={{ mb: 1 }}>
+                    <Button component={Link} to="/address/create" variant="contained" size="small" color="primary">
                         Create Address
                     </Button>
                 </Box>
+
+                <Search
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    searchResults={searchResults}
+                    setSearchResults={setSearchResults}
+                    token={token}
+                />
+                <Filter
+                    filterQuery={filterQuery}
+                    setFilterQuery={setFilterQuery}
+                    filterResults={filterResults}
+                    setFilterResults={setFilterResults}
+                    token={token}
+                />
+
                 <TableContainer component={Paper} >
-                    <TextField
-                        variant='outlined'
-                        placeholder='Search'
-                        type='search'
-                        size="small"
-                        sx={{ mb: 1 }}
-                        onInput={(e) => handleSearchInputChange(e.target.value)}
-                    />
                     <DataTable
                         rows={rows}
                         columns={columns}
