@@ -1,0 +1,61 @@
+version: '4.15.0'
+services:
+
+    frontend:
+      build:
+        context: ./client
+      ports:
+        - "80:80"
+      networks:
+        - app-network
+
+    backend:
+      build:
+        context: ./server/
+      restart: unless-stopped
+      environment:
+        MYSQL_DATABASE: arraytics
+        MYSQL_ROOT_PASSWORD: 
+        MYSQL_PASSWORD: 
+        MYSQL_USER: root
+      working_dir: /var/www
+      volumes:
+        - ./server:/var/www
+      ports:
+        - "8000:8000"
+      networks:
+        - app-network
+        - db
+
+    appdb:
+      image: mysql:5.7
+      restart: unless-stopped
+      environment:
+        MYSQL_DATABASE: arraytics
+        MYSQL_ROOT_PASSWORD: 
+        MYSQL_PASSWORD: 
+        MYSQL_USER: root
+      volumes:
+        - ./initdb:/docker-entrypoint-initdb.d
+      ports:
+        - 3306:3306
+      networks:
+        - db
+
+    phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      restart: unless-stopped
+      environment:
+        PMA_HOST: appdb
+        MYSQL_ROOT_PASSWORD: 
+      depends_on:
+        - appdb
+      ports:
+        - 8443:80
+      networks:
+        - db
+
+networks:
+  app-network:
+    driver: bridge
+  db:
