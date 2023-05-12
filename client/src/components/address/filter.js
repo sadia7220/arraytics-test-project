@@ -27,6 +27,7 @@ export default function Filter({ filterQuery, setFilterQuery, setFilterResults, 
             <Select labelId="demo-simple-select-label"
                 id="demo-simple-select"
                 label="Filter by gender"
+                value=""
                 onChange={(e) => handleFilterInputChange(e.target.value)}
             >
                 <MenuItem value={'male'}>Male</MenuItem>

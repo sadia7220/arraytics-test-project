@@ -12,9 +12,16 @@ const Login = () => {
     let navigate = useNavigate()
 
     const login = () => {
+        console.log('login')
         axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, {
             email,
             password
+        },
+        {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*'
+            }
         }).then(
             function (response) {
                 if (response.data.response_code === 201) {
